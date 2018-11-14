@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import { setImmediate, each, series as waterfall } from 'async';
+import { BlobService } from 'azure-storage';
 const path = require('upath');
 const asyncFilter = require('interface-datastore').utils.asyncFilter;
 const asyncSort = require('interface-datastore').utils.asyncSort;
@@ -12,28 +13,14 @@ const Deferred = require('pull-defer');
 const pull = require('pull-stream');
 
 export type AzureDSInputOptions = {
-  blob: BlobInstance,
+  blob: BlobService,
   createIfMissing?: boolean
-}
-
-declare type BlobInstance = {
-  config: {
-    params: {
-      Bucket?: string
-    }
-  },
-  deleteObject: any,
-  getObject: any,
-  headBucket: any,
-  headObject: any,
-  listObjectsV2: any,
-  upload: any
 }
 
 class AzureDataStore {
   private path: string;
   private opts: AzureDSInputOptions;
-  private bucket: string;
+  //private container: string;
   private createIfMissing: boolean;
 
   /**
@@ -44,21 +31,19 @@ class AzureDataStore {
   public constructor ( path: string, opts: AzureDSInputOptions) {
     this.path = path;
     this.opts = opts;
-    const {
-      createIfMissing = false,
-      blob: {
-        config: {
-          params: {
-            Bucket = ""
-          } = {}
-        } = {}
-      } = {}
-    } = opts;
+    // const {
+    //   createIfMissing = false,
+    //   blob: {
+    //     config: {
+    //       params: {
+    //         Bucket = ""
+    //       } = {}
+    //     } = {}
+    //   } = {}
+    // } = opts;
 
-    assert(typeof Bucket === 'string', 'An S3 instance with a predefined Bucket must be supplied. See the datastore-s3 README for examples.');
-    assert(typeof createIfMissing === 'boolean', `createIfMissing must be a boolean but was (${typeof createIfMissing}) ${createIfMissing}`);
-    this.bucket = Bucket;
-    this.createIfMissing = createIfMissing;
+    //this.container = Container;
+    this.createIfMissing = !opts.createIfMissing;
   }
 
   /**
