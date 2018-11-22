@@ -22,7 +22,6 @@
     "upath": "^1.1.0"
   },
   "devDependencies": {
-    "@types/async": "^2.0.50",
     "@types/node": "^10.3.1",
     "husky": "^0.14.3",
     "jasmine": "^3.1.0",

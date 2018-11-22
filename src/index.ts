@@ -1,5 +1,7 @@
-import { setImmediate, each, series as waterfall } from 'async';
 import { BlobService } from 'azure-storage';
+const setImmediate = require('async/setImmediate')
+const each = require('async/each')
+const waterfall = require('async/series')
 const path = require('upath');
 const asyncFilter = require('interface-datastore').utils.asyncFilter;
 const asyncSort = require('interface-datastore').utils.asyncSort;

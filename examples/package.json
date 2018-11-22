@@ -10,14 +10,13 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
-        "async": "^2.6.1",
         "azure-storage": "^2.10.2",
-        "datastore-s3": "../",
+        "datastore-azure": "../",
+        "dotenv": "^5.0.0",
         "ipfs": "~0.33",
         "ipfs-repo": "~0.24.0"
     },
     "devDependencies": {
-        "@types/async": "^2.0.50",
         "@types/node": "^10.3.1",
         "typescript": "^2.9.1"
     }
