@@ -16,12 +16,9 @@ blobService.createContainerIfNotExists(containerName, err => {
     if (err) {
         console.log('Error creating container');
     }
-    else {
-        let opts = {
-            blob: blobService,
-            createIfMissing: false
-        };
-        const blobStore = new AzureDataStore(path, opts, containerName);
+    else 
+    {
+        const blobStore = new AzureDataStore(path, { blobService }, containerName);
         const blobLock = new BlobLock(blobStore);
 
         const repo = new Repo('/tmp/test/.ipfs', {
