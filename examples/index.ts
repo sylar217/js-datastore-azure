@@ -18,7 +18,12 @@ blobService.createContainerIfNotExists(containerName, err => {
     }
     else 
     {
-        const blobStore = new AzureDataStore(path, { blobService }, containerName);
+        let opts = {
+            blob: blobService,
+            containerName: containerName,
+            createIfMissing: true
+        };
+        const blobStore = new AzureDataStore(path, opts);
         const blobLock = new BlobLock(blobStore);
 
         const repo = new Repo('/tmp/test/.ipfs', {
@@ -29,10 +34,10 @@ blobService.createContainerIfNotExists(containerName, err => {
                 datastore: AzureDataStore
             },
             storageBackendOptions: {
-                root: { blobService },
-                blocks: { blobService },
-                keys: { blobService },
-                datastore: { blobService }
+                root: opts,
+                blocks: opts,
+                keys: opts,
+                datastore: opts
             },
             lock: blobLock
         });
@@ -48,7 +53,7 @@ blobService.createContainerIfNotExists(containerName, err => {
 
         console.log('Start the node');
 
-        // Test out the repo by sending and fetching some data          
+        // Test out the repo by sending and fetching some data
         node.on('ready', () => {
             console.log('Ready');
             node.version()

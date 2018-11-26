@@ -15,6 +15,7 @@ const pull = require('pull-stream');
 
 export type AzureDSInputOptions = {
   blob: BlobService,
+  containerName: string,
   createIfMissing?: boolean
 }
 
@@ -30,10 +31,10 @@ class AzureDataStore {
    * @param opts Azure DS input options
    * @param containerName Azure blob storage container name
    */
-  public constructor ( path: string, opts: AzureDSInputOptions, containerName: string) {
+  public constructor ( path: string, opts: AzureDSInputOptions) {
     this.path = path;
     this.opts = opts;
-    this.container = containerName;
+    this.container = opts.containerName;
     //this.createIfMissing = !opts.createIfMissing;
   }
 
@@ -122,13 +123,12 @@ class AzureDataStore {
    * @param callback 
    */
   public get (key: any, callback: any): void {
-    // getBlobToText
-    this.opts.blob.getBlobToText(this.container, this.getFullKey(key), (err, text, result, response) => {
+    this.opts.blob.getBlobToText(this.container, this.getFullKey(key), { disableContentMD5Validation: true}, (err, text, result, response) => {
       if (err && response.statusCode === 404)
       {
         return callback(Errors.notFoundError(err));
       }
-      else if (err)
+      else if (response.statusCode !== 200 && err)
       {
         return callback(err);
       }
@@ -142,7 +142,7 @@ class AzureDataStore {
    * @param callback 
    */
   public has (key: any, callback: any): void {
-    this.opts.blob.doesContainerExist(this.getFullKey(key), (err, result, response) => {
+    this.opts.blob.doesBlobExist(this.container, this.getFullKey(key), (err, result, response) => {
       if (err)
       {
         callback(err, false);
@@ -284,8 +284,8 @@ class AzureDataStore {
    * @param callback 
    */
   public open (callback: any): void {
-    this.opts.blob.getContainerMetadata(this.container, (err, result, response) => {
-      if (err && response.statusCode === 404) {
+    this.opts.blob.doesBlobExist(this.container, this.path, (err, result, response) => {
+      if (response.statusCode === 404) {
         return this.put(new Key('/', false), Buffer.from(''), callback);
       }
 

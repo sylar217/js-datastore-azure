@@ -13,8 +13,8 @@
         "azure-storage": "^2.10.2",
         "datastore-azure": "../",
         "dotenv": "^5.0.0",
-        "ipfs": "~0.33",
-        "ipfs-repo": "~0.24.0"
+        "ipfs": "^0.33",
+        "ipfs-repo": "^0.24.0"
     },
     "devDependencies": {
         "@types/node": "^10.3.1",

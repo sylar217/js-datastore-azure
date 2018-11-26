@@ -11,7 +11,7 @@ class BlobLock
 
     getLockFilePath (dir)
     {
-        return path.join(dir, 'repo.lock');
+        return 'repo.lock';
     }
 
     lock (dir, callback)
