@@ -19,11 +19,11 @@ export type AzureDSInputOptions = {
   createIfMissing?: boolean
 }
 
-class AzureDataStore {
+export class AzureDataStore {
   private path: string;
   private opts: AzureDSInputOptions;
   private container: string;
-  //private createIfMissing: boolean;
+  public createIfMissing: boolean;
 
   /**
    * Constructor to initialize the class
@@ -35,7 +35,14 @@ class AzureDataStore {
     this.path = path;
     this.opts = opts;
     this.container = opts.containerName;
-    //this.createIfMissing = !opts.createIfMissing;
+    this.createIfMissing = !opts.createIfMissing;
+
+    this.opts.blob.doesContainerExist(this.container, (error, result, response) => {
+      if (error && result.created === false)
+      {
+        throw new Error("Container doesnt exists");
+      }
+    })
   }
 
   /**
@@ -305,5 +312,3 @@ class AzureDataStore {
     setImmediate(callback)
   }
 }
-
-module.exports = AzureDataStore;
