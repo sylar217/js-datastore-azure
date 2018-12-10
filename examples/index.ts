@@ -5,7 +5,8 @@ if (process.env["NODE_ENV"] !== 'production') {
 import * as storage from 'azure-storage';
 const IPFS = require('ipfs')
 const Repo = require('ipfs-repo')
-const AzureDataStore = require('datastore-azure')
+const datastore = require('datastore-azure');
+const AzureDataStore = datastore.AzureDataStore;
 const BlobLock = require('./blobLock')
 
 let blobService = storage.createBlobService();

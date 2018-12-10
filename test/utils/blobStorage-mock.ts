@@ -1,13 +1,13 @@
 const standin = require('stand-in');
 
 class BlobStorageError extends Error {
-    private code;
-    private statusCode;
-    constructor (message, code) {
-        super(message);
-        this.code = message;
-        this.statusCode = code;
-    }
+  private code;
+  private statusCode;
+  constructor (message, code) {
+    super(message);
+    this.code = message;
+    this.statusCode = code;
+  }
 }
 
 /**
@@ -15,64 +15,53 @@ class BlobStorageError extends Error {
  * @param {blobService} blobService
  * @returns {void}
  */
-module.exports = function (blobService) {
-    const mocks: any = {};
-    const storage: any = {};
+module.exports = (blobService) => {
+  const mocks: any = {};
+  const storage: any = {};
 
-    mocks.deleteContainerIfExists = standin.replace(blobService, 'deleteContainerIfExists', (stand, params, callback) => {
-        if (storage[params.Key])
-        {
-            delete storage[params.Key];
-            callback(null, {});
-        }
-        else
-        {
-            callback(new BlobStorageError('NotFound', 404), null);
-        }
-    });
+  mocks.deleteContainerIfExists = standin.replace(blobService, 'deleteContainerIfExists', (stand, key, callback) => {
+    if (storage[key]) {
+      delete storage[key];
+      callback(null, {});
+    } else {
+      callback(new BlobStorageError('NotFound', 404), null);
+    }
+  });
 
-    mocks.getBlobToText = standin.replace(blobService, 'getBlobToText', (stand, params, callback) => {
-        if (storage[params.Key])
-        {
-            callback(null, { Body: storage[params.Key] });
-        }
-        else
-        {
-            callback(new BlobStorageError('NotFound', 404), null);
-        }
-    });
+  mocks.getBlobToText = standin.replace(blobService, 'getBlobToText', (stand, name, key, options, callback) => {
+    if (storage[key]) {
+      callback(null, { Body: storage[key] });
+    } else {
+      callback(new BlobStorageError('NotFound', 404), null);
+    }
+  });
 
-    mocks.doesBlobExist = standin.replace(blobService, 'doesBlobExist', (standin, params, callback) => {
-        if (storage[params.Key])
-        {
-            callback(null, {});
-        }
-        else
-        {
-            callback(new BlobStorageError('NotFound', 404), null);
-        }
-    });
+  mocks.doesBlobExist = standin.replace(blobService, 'doesBlobExist', (standin, name, key, callback) => {
+    if (storage[key]) {
+      callback(null, {});
+    } else {
+      callback(new BlobStorageError('NotFound', 404), null);
+    }
+  });
 
-    mocks.listBlobsSegmentedWithPrefix = standin.replace(blobService, 'listBlobsSegmentedWithPrefix', (standin, params, callback) => {
-        const results = {
-            Contents: []
-        }
+  mocks.listBlobsSegmentedWithPrefix = standin.replace(blobService, 'listBlobsSegmentedWithPrefix', (standin, name, prefix, token, callback) => {
+    const results = {
+      Contents: []
+    };
 
-        for (let k in storage)
-        {
-            if (k.startsWith(params.Prefix))
-            {
-                results.Contents.push({
-                    Key: k
-                });
-            }
-        }
+    for (let k in storage) {
+      if (k.startsWith(prefix)) {
+        results.Contents.push({
+          Key: k
+        });
+      }
+    }
 
-        callback(null, results);
-    });
+    callback(null, results);
+  });
 
-    mocks.createBlockBlobFromText = standin.replace(blobService, 'createBlockBlobFromText', (stand, params, callback) => {
-        storage[params.Key] = params.Body;
-        callback(null);
-    });
-}
+  mocks.createBlockBlobFromText = standin.replace(blobService, 'createBlockBlobFromText', (stand, name, key, value, callback) => {
+    storage[key] = value;
+    callback(null);
+  });
+};
