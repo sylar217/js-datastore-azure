@@ -1,5 +1,4 @@
 import { BlobService } from 'azure-storage';
-import { write } from 'fs';
 var fs = require('fs');
 const setImmediate = require('async/setImmediate');
 const each = require('async/each');
@@ -145,7 +144,7 @@ export class AzureDataStore {
     });
 
     this.opts.blob.getBlobToStream(this.container, this.getFullKey(key), writeStream, (err, result, response) => {
-      if (err && err.message === 'NotFound') {
+      if (err && err.message === 'NotFound') {  
         return callback(Errors.notFoundError(err));
       } else if (err) {
         return callback(err);
@@ -176,7 +175,7 @@ export class AzureDataStore {
    * @param callback
    */
   public delete (key: any, callback: any): void {
-    this.opts.blob.deleteContainerIfExists(this.getFullKey(key), (err, result, response) => {
+    this.opts.blob.deleteBlobIfExists(this.container, this.getFullKey(key), (err, result, response) => {
       if (err) {
         return callback(Errors.dbDeleteFailedError(err));
       }
@@ -290,9 +289,9 @@ export class AzureDataStore {
       if (err) {
         return callback(Errors.dbOpenFailedError(err));
       }
-      // if (response.statusCode === 404) {
-      //   return this.put(new Key('/', false), Buffer.from(''), callback);
-      // }
+      if (response.statusCode === 404) {
+        return this.put(new Key('/', false), Buffer.from(''), callback);
+      }
 
       callback();
     });

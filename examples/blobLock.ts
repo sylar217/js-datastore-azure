@@ -1,5 +1,7 @@
-const path = require('path');
-
+/**
+ * Uses an blob object in Azure blob container as a lock to signal that an IPFS repo is in use.
+ * This ensures multiple IPFS nodes doesnt use the same Azure container as a datastore at the same time.
+ */
 class BlobLock
 {
     private blob: any;
@@ -9,14 +11,22 @@ class BlobLock
         this.blob = blobDataStore;
     }
 
-    getLockFilePath (dir)
+    /**
+     * Returns the lock file path name
+     */
+    private getLockFilePath (): string
     {
         return 'repo.lock';
     }
 
-    lock (dir, callback)
+    /**
+     * Creates the lock.
+     * @param dir {string} Path to the folder where to create lock.
+     * @param callback {Function(Error, LockCloser)}
+     */
+    public lock (dir, callback): void
     {
-        const lockPath = this.getLockFilePath(dir);
+        const lockPath = this.getLockFilePath();
 
         this.locked(dir, (err, alreadyLocked) => {
             if (err || alreadyLocked)
@@ -34,9 +44,17 @@ class BlobLock
         });
     }
 
-    getCloser (lockPath)
+    /**
+     * Returns a LockCloser, which has a `close` method for rmeoving the lock located at `lockPath`  
+     * @param lockPath {string} Path to repo lock.
+     */
+    public getCloser (lockPath)
     {
-        return {
+        const closer = {
+            /**
+             * Removes the lock. This can be overridden to customize how the lock is removed.
+             * @param callback Function(error)
+             */
             close: (callback) => {
                 this.blob.delete(lockPath, (err) => {
                     if (err && err.statusCode !== 404)
@@ -46,12 +64,34 @@ class BlobLock
                     callback(null);
                 });
             }
-        }
+        };
+
+        const cleanup = () => {
+            console.log('\nAttempting to cleanup gracefully...');
+
+            closer.close(() => {
+                console.log('Cleanup complete, exiting.');
+                process.exit();
+            });
+        };
+
+        // Listen for graceful termination
+        process.on('SIGTERM', cleanup);
+        process.on('SIGINT', cleanup);
+        process.on('SIGHUP', cleanup);
+        process.on('uncaughtException', cleanup);
+
+        return closer;
     }
 
-    locked (dir, callback)
+    /**
+     * Checks whether or not a lock exists.
+     * @param dir {string} LockFile path
+     * @param callback {Function(Error, boolean)}
+     */
+    public locked (dir, callback): void
     {
-        this.blob.get(this.getLockFilePath(dir), (err, data) => {
+        this.blob.get(this.getLockFilePath(), (err, data) => {
             if (err && err.code === 'ERR_NOT_FOUND')
             {
                 return callback(null, false);

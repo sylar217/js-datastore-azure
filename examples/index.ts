@@ -9,10 +9,12 @@ const datastore = require('datastore-azure');
 const AzureDataStore = datastore.AzureDataStore;
 const BlobLock = require('./blobLock')
 
+// Create blobService
 let blobService = storage.createBlobService();
 const containerName = "ipfscontainer";
 const path = "/tmp/test/.ipfs";
 
+// Create container
 blobService.createContainerIfNotExists(containerName, err => {
     if (err) {
         console.log('Error creating container');
@@ -27,6 +29,7 @@ blobService.createContainerIfNotExists(containerName, err => {
         const blobStore = new AzureDataStore(path, opts);
         const blobLock = new BlobLock(blobStore);
 
+        // Create the IPFS repo, backed by Azure blob storage
         const repo = new Repo('/tmp/test/.ipfs', {
             storageBackends: {
                 root: AzureDataStore,
@@ -43,7 +46,7 @@ blobService.createContainerIfNotExists(containerName, err => {
             lock: blobLock
         });
 
-        // Create a new IPFS node with our S3 backed Repo
+        // Create a new IPFS node with Azure blob storage backed Repo
         let node = new IPFS({
             repo,
             config: {

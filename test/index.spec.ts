@@ -6,8 +6,10 @@ chai.use(require('dirty-chai'));
 const Key = require('interface-datastore').Key;
 import * as storage from 'azure-storage';
 const blobServiceMock = require('./utils/blobStorage-mock');
+var fs = require('fs');
 const standin = require('stand-in');
 import { AzureDataStore } from '../src/index';
+import { write } from 'fs';
 
 describe('AzureDataStore', () => {
   const blobService = storage.createBlobService();
@@ -86,12 +88,14 @@ describe('AzureDataStore', () => {
         if (err) {
           console.log('Error creating container');
         } else {
+          var writeStream = fs.createWriteStream('azureBlob.txt');
           const blobStore = new AzureDataStore('.ipfs/datastore', { blob: blobService, containerName: containerName });
 
-          standin.replace(blobService, 'getBlobToStream', (stand, name, key, stream, callback) => {
+          standin.replace(blobService, 'getBlobToStream', (stand, name, key, writeStream, callback) => {
             expect(key).toEqual('.ipfs/datastore/z/key');
             stand.restore();
             callback(null, Buffer.from('test'), { statusCode: 200 });
+            writeStream.close();
           });
 
           blobStore.get(new Key('/z/key'), done);
@@ -105,11 +109,11 @@ describe('AzureDataStore', () => {
         } else {
           const blobStore = new AzureDataStore('.ipfs/datastore', { blob: blobService, containerName: containerName });
 
-          standin.replace(blobService, 'getBlobToText', (stand, name, key, callback) => {
+          standin.replace(blobService, 'getBlobToStream', (stand, name, key, writeStream, callback) => {
             expect(key).toEqual('.ipfs/datastore/z/key');
             stand.restore();
-            let error = new Error('not found');
-            callback(error, null, null, { statusCode: 404 });
+            let error = new Error('NotFound');
+            callback(error, null, { statusCode: 404 });
           });
 
           blobStore.get(new Key('/z/key'), (err) => {
@@ -129,7 +133,7 @@ describe('AzureDataStore', () => {
         } else {
           const blobStore = new AzureDataStore('.ipfs/datastore', { blob: blobService, containerName: containerName });
 
-          standin.replace(blobService, 'deleteContainerIfExists', (stand, key, callback) => {
+          standin.replace(blobService, 'deleteBlobIfExists', (stand, name, key, callback) => {
             expect(key).toEqual('.ipfs/datastore/z/key');
             stand.restore();
             callback(new Error('bad things'));
