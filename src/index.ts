@@ -117,11 +117,18 @@ export class AzureDataStore {
    * @param callback
    */
   public put (key: any, val: Buffer, callback: any): void {
+    // const options : BlobService.CreateBlobRequestOptions = { 
+    //   contentSettings: {
+    //     contentEncoding: 'utf-8',
+    //     contentType: 'text/plain'
+    //   }
+    // };
+
     this.opts.blob.createBlockBlobFromText(this.container, this.getFullKey(key), val, (err, result, response) => {
       if (err) {
         return callback(Errors.dbWriteFailedError(err));
       }
-      callback();
+      return callback();
     });
   }
 
@@ -138,8 +145,8 @@ export class AzureDataStore {
       fs.readFile('azureBlob.txt', (err, data) => {
         if (data)
         {
-          callback(null, Buffer.from(data));
-        }
+          return callback(null, Buffer.from(data));
+        } 
       });
     });
 
@@ -151,6 +158,25 @@ export class AzureDataStore {
       }
     });
   }
+
+  /**
+   * Read content from azure blob storage.
+   * @param key 
+   * @param callback 
+   */
+//   public get (key: any, callback: any): void {
+//     this.opts.blob.getBlobToText(this.container, this.getFullKey(key), { disableContentMD5Validation: true}, (err, text, result, response) => {
+//       if (err && response.statusCode === 404)
+//       {
+//         return callback(Errors.notFoundError(err));
+//       }
+//       else if (response.statusCode !== 200 && err)
+//       {
+//         return callback(err);
+//       }
+//       return callback(null, Buffer.from(text, 'utf-8'));
+//     });
+// }
 
   /**
    * Check for the existence of the given key.
